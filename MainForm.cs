@@ -866,6 +866,9 @@ namespace BypassBlueStacks
                 Log("🔧 Aplicando propriedades do dispositivo...");
                 ApplyPropertiesOnce(device);
 
+                Log("🔧 Aplicando propriedades adicionais para jogos...");
+                ApplyGameSpecificProperties(deviceKey);
+
                 Log("🔍 Verificando propriedades...");
                 VerifyBypass(device);
 
@@ -886,6 +889,103 @@ namespace BypassBlueStacks
                 {
                     MessageBox.Show($"Falha ao aplicar bypass:\n{ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }));
+            }
+        }
+
+        private void ApplyGameSpecificProperties(string deviceKey)
+        {
+            // Propriedades específicas para Last Island Survival
+            if (deviceKey.Contains("lastisland"))
+            {
+                string[][] lastIslandCommands = new string[][]
+                {
+                    // Propriedades adicionais específicas do Last Island
+                    new[] { adbPath, "shell", "setprop", "ro.product.mod_device", "CPH2211_11" },
+                    new[] { adbPath, "shell", "setprop", "ro.product.odm.brand", "OPPO" },
+                    new[] { adbPath, "shell", "setprop", "ro.product.odm.manufacturer", "OPPO" },
+                    new[] { adbPath, "shell", "setprop", "ro.product.odm.model", "CPH2211" },
+                    new[] { adbPath, "shell", "setprop", "ro.product.odm.device", "CPH2211" },
+                    new[] { adbPath, "shell", "setprop", "ro.product.vendor.brand", "OPPO" },
+                    new[] { adbPath, "shell", "setprop", "ro.product.vendor.manufacturer", "OPPO" },
+                    new[] { adbPath, "shell", "setprop", "ro.product.vendor.model", "CPH2211" },
+                    new[] { adbPath, "shell", "setprop", "ro.product.vendor.device", "CPH2211" },
+                    // Propriedades de segurança (Last Island verifica)
+                    new[] { adbPath, "shell", "setprop", "ro.vendor.build.security_patch", "2023-03-01" },
+                    new[] { adbPath, "shell", "setprop", "ro.build.version.security_patch", "2023-03-01" },
+                    // Propriedades de boot (importante)
+                    new[] { adbPath, "shell", "setprop", "ro.bootmode", "unknown" },
+                    new[] { adbPath, "shell", "setprop", "ro.boot.hardware", "qcom" },
+                    new[] { adbPath, "shell", "setprop", "ro.boot.serialno", "R58M123456" },
+                    // Propriedades de sistema (Last Island verifica extensivamente)
+                    new[] { adbPath, "shell", "setprop", "ro.serialno", "R58M123456" },
+                    new[] { adbPath, "shell", "setprop", "sys.usb.state", "mtp,adb" },
+                    new[] { adbPath, "shell", "setprop", "ro.adb.secure", "1" }
+                };
+
+                foreach (var cmd in lastIslandCommands)
+                {
+                    try
+                    {
+                        ProcessStartInfo psi = new ProcessStartInfo
+                        {
+                            FileName = cmd[0],
+                            Arguments = string.Join(" ", cmd.Skip(1)),
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            CreateNoWindow = true
+                        };
+
+                        using (Process process = Process.Start(psi))
+                        {
+                            if (process != null)
+                            {
+                                process.WaitForExit(2000);
+                            }
+                        }
+                    }
+                    catch { }
+                }
+                Log("✅ Propriedades específicas do Last Island aplicadas");
+            }
+
+            // Propriedades específicas para Free Fire
+            if (deviceKey.Contains("freefire"))
+            {
+                string[][] freeFireCommands = new string[][]
+                {
+                    // Propriedades específicas do Free Fire
+                    new[] { adbPath, "shell", "setprop", "ro.product.board", "lahaina" },
+                    new[] { adbPath, "shell", "setprop", "ro.board.platform", "lahaina" },
+                    new[] { adbPath, "shell", "setprop", "ro.chipname", "lahaina" },
+                    new[] { adbPath, "shell", "setprop", "ro.product.board.platform", "lahaina" }
+                };
+
+                foreach (var cmd in freeFireCommands)
+                {
+                    try
+                    {
+                        ProcessStartInfo psi = new ProcessStartInfo
+                        {
+                            FileName = cmd[0],
+                            Arguments = string.Join(" ", cmd.Skip(1)),
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            CreateNoWindow = true
+                        };
+
+                        using (Process process = Process.Start(psi))
+                        {
+                            if (process != null)
+                            {
+                                process.WaitForExit(2000);
+                            }
+                        }
+                    }
+                    catch { }
+                }
+                Log("✅ Propriedades específicas do Free Fire aplicadas");
             }
         }
 
@@ -926,7 +1026,41 @@ namespace BypassBlueStacks
                 new[] { adbPath, "shell", "setprop", "ro.secure", "1" },
                 new[] { adbPath, "shell", "setprop", "ro.allow.mock.location", "0" },
                 // Propriedades de característica (Free Fire verifica)
-                new[] { adbPath, "shell", "setprop", "ro.product.characteristics", "phone,tablet" }
+                new[] { adbPath, "shell", "setprop", "ro.product.characteristics", "phone,tablet" },
+                // Propriedades específicas para Last Island Survival
+                new[] { adbPath, "shell", "setprop", "ro.build.description", "a52xinsxx-user 13 TP1A.220624.014 A525FXXU6DWB1 release-keys" },
+                new[] { adbPath, "shell", "setprop", "ro.build.display.id", "TP1A.220624.014.A525FXXU6DWB1" },
+                new[] { adbPath, "shell", "setprop", "ro.build.version.incremental", "A525FXXU6DWB1" },
+                new[] { adbPath, "shell", "setprop", "ro.build.date", "Mon Mar 20 12:00:00 KST 2023" },
+                new[] { adbPath, "shell", "setprop", "ro.build.date.utc", "1679284800" },
+                new[] { adbPath, "shell", "setprop", "ro.build.user", "dpi" },
+                new[] { adbPath, "shell", "setprop", "ro.build.host", "SWDD6123" },
+                // Propriedades de sistema (Last Island verifica)
+                new[] { adbPath, "shell", "setprop", "ro.system.build.fingerprint", device.Fingerprint },
+                new[] { adbPath, "shell", "setprop", "ro.vendor.build.fingerprint", device.Fingerprint },
+                new[] { adbPath, "shell", "setprop", "ro.bootimage.build.fingerprint", device.Fingerprint },
+                // Propriedades de rede (importante para jogos online)
+                new[] { adbPath, "shell", "setprop", "net.dns1", "8.8.8.8" },
+                new[] { adbPath, "shell", "setprop", "net.dns2", "8.8.4.4" },
+                // Propriedades de localização (Last Island verifica)
+                new[] { adbPath, "shell", "setprop", "ro.com.google.locationfeatures", "1" },
+                new[] { adbPath, "shell", "setprop", "ro.com.google.gmsversion", "12_202301" },
+                // Propriedades de sensor (jogos verificam sensores)
+                new[] { adbPath, "shell", "setprop", "ro.hardware.sensors", "1" },
+                new[] { adbPath, "shell", "setprop", "ro.hardware.gps", "1" },
+                // Propriedades de memória (Last Island verifica)
+                new[] { adbPath, "shell", "setprop", "ro.config.low_ram", "false" },
+                new[] { adbPath, "shell", "setprop", "ro.config.ram_size", "8GB" },
+                // Propriedades de GPU (importante para jogos)
+                new[] { adbPath, "shell", "setprop", "ro.opengles.version", "196610" },
+                new[] { adbPath, "shell", "setprop", "ro.gpu.rendering", "1" },
+                // Remover mais flags de emulador
+                new[] { adbPath, "shell", "setprop", "ro.bootloader", "unknown" },
+                new[] { adbPath, "shell", "setprop", "ro.hardware.keystore", "software" },
+                new[] { adbPath, "shell", "setprop", "ro.product.first_api_level", "30" },
+                new[] { adbPath, "shell", "setprop", "ro.product.locale", "en-US" },
+                new[] { adbPath, "shell", "setprop", "ro.product.locale.language", "en" },
+                new[] { adbPath, "shell", "setprop", "ro.product.locale.region", "US" }
             };
 
             foreach (var cmd in commands)
@@ -1014,6 +1148,7 @@ namespace BypassBlueStacks
                         if (CheckAdbConnection())
                         {
                             ApplyPropertiesOnce(device);
+                            ApplyGameSpecificProperties(deviceKey);
                         }
                         Thread.Sleep(5000); // Reaplica a cada 5 segundos
                     }
