@@ -866,6 +866,9 @@ namespace BypassBlueStacks
                 Log("🔧 Aplicando propriedades do dispositivo...");
                 ApplyPropertiesOnce(device);
 
+                // Verificar root antes de aplicar propriedades específicas
+                CheckRoot();
+                
                 Log("🔧 Aplicando propriedades adicionais para jogos...");
                 ApplyGameSpecificProperties(deviceKey);
 
@@ -972,26 +975,114 @@ namespace BypassBlueStacks
                 TryModifySystemFiles();
             }
 
-        private void TryModifySystemFiles()
+        private bool hasRoot = false;
+
+        private bool CheckRoot()
         {
-            // Tentar modificar arquivos do sistema que indicam emulador
-            // Nota: Pode não funcionar sem root, mas tentamos mesmo assim
             try
             {
-                Log("🔧 Tentando modificar arquivos do sistema...");
+                ProcessStartInfo psi = new ProcessStartInfo
+                {
+                    FileName = adbPath,
+                    Arguments = "shell su -c \"id\"",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+
+                using (Process process = Process.Start(psi))
+                {
+                    if (process != null)
+                    {
+                        string output = process.StandardOutput.ReadToEnd();
+                        process.WaitForExit(3000);
+                        
+                        bool rootAvailable = output.Contains("uid=0") || output.Contains("root");
+                        if (rootAvailable != hasRoot)
+                        {
+                            hasRoot = rootAvailable;
+                            if (hasRoot)
+                            {
+                                Log("✅ Root detectado! Usando métodos avançados de bypass.");
+                            }
+                            else
+                            {
+                                Log("⚠️ Root não disponível. Bypass limitado a propriedades temporárias.");
+                            }
+                        }
+                        return rootAvailable;
+                    }
+                }
+            }
+            catch { }
+            return false;
+        }
+
+        private void TryModifySystemFiles()
+        {
+            // Verificar se root está disponível
+            bool rootAvailable = CheckRoot();
+            
+            if (rootAvailable)
+            {
+                Log("🔧 Root detectado! Modificando arquivos do sistema permanentemente...");
                 
-                // Comandos que podem funcionar sem root (tentativa)
-                string[][] commands = new string[][]
+                // Comandos que requerem root para modificar arquivos do sistema
+                string[][] rootCommands = new string[][]
+                {
+                    // Modificar build.prop permanentemente
+                    new[] { adbPath, "shell", "su", "-c", "mount -o remount,rw /system" },
+                    new[] { adbPath, "shell", "su", "-c", "sed -i 's/ro.kernel.qemu=1/ro.kernel.qemu=0/g' /system/build.prop" },
+                    new[] { adbPath, "shell", "su", "-c", "sed -i '/ro.kernel.qemu=/d' /system/build.prop" },
+                    new[] { adbPath, "shell", "su", "-c", "echo 'ro.kernel.qemu=0' >> /system/build.prop" },
+                    new[] { adbPath, "shell", "su", "-c", "mount -o remount,ro /system" },
+                    // Criar arquivo que indica dispositivo real
+                    new[] { adbPath, "shell", "su", "-c", "touch /data/local/tmp/.real_device" },
+                    new[] { adbPath, "shell", "su", "-c", "echo '0' > /data/local/tmp/qemu_flag" }
+                };
+
+                foreach (var cmd in rootCommands)
+                {
+                    try
+                    {
+                        ProcessStartInfo psi = new ProcessStartInfo
+                        {
+                            FileName = cmd[0],
+                            Arguments = string.Join(" ", cmd.Skip(1)),
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            CreateNoWindow = true
+                        };
+
+                        using (Process process = Process.Start(psi))
+                        {
+                            if (process != null)
+                            {
+                                process.WaitForExit(3000);
+                            }
+                        }
+                    }
+                    catch { }
+                }
+                
+                Log("✅ Arquivos do sistema modificados permanentemente!");
+                Log("⚠️ REINICIE o BlueStacks para aplicar mudanças permanentes!");
+            }
+            else
+            {
+                Log("⚠️ Root não disponível. Tentando métodos sem root...");
+                
+                // Comandos que podem funcionar sem root (limitados)
+                string[][] noRootCommands = new string[][]
                 {
                     // Tentar criar arquivo que indica dispositivo real (pode funcionar sem root)
                     new[] { adbPath, "shell", "touch", "/data/local/tmp/.real_device" },
-                    // Tentar modificar propriedades via shell diretamente
-                    new[] { adbPath, "shell", "echo", "0", ">", "/data/local/tmp/qemu_flag" },
-                    // Tentar verificar se podemos escrever em /data
                     new[] { adbPath, "shell", "echo", "real_device", ">", "/data/local/tmp/device_type" }
                 };
 
-                foreach (var cmd in commands)
+                foreach (var cmd in noRootCommands)
                 {
                     try
                     {
@@ -1016,16 +1107,14 @@ namespace BypassBlueStacks
                     catch { }
                 }
                 
-                Log("⚠️ Modificação de arquivos tentada (algumas podem requerer root)");
-                Log("⚠️ IMPORTANTE: Last Island pode requerer ROOT para bypass completo");
-            }
-            catch (Exception ex)
-            {
-                Log($"⚠️ Não foi possível modificar arquivos do sistema: {ex.Message}");
+                Log("⚠️ IMPORTANTE: Para bypass completo do Last Island, ative ROOT no BlueStacks!");
+                Log("📖 Veja o guia: COMO_ATIVAR_ROOT.md");
             }
         }
 
-            // Propriedades específicas para Free Fire
+        // Propriedades específicas para Free Fire
+        private void ApplyFreeFireProperties()
+        {
             if (deviceKey.Contains("freefire"))
             {
                 string[][] freeFireCommands = new string[][]
