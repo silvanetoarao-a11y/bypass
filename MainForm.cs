@@ -64,6 +64,18 @@ namespace BypassBlueStacks
                 }
             },
             {
+                "samsung_galaxy_s21_ultra",
+                new DeviceProfile
+                {
+                    Name = "Samsung Galaxy S21 Ultra",
+                    Model = "SM-G998B",
+                    Brand = "samsung",
+                    Manufacturer = "samsung",
+                    Device = "p3s",
+                    Fingerprint = "samsung/p3sxxx/p3s:13/TP1A.220624.014/G998BXXU6EWB7:user/release-keys"
+                }
+            },
+            {
                 "xiaomi_redmi_note_11",
                 new DeviceProfile
                 {
