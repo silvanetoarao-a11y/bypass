@@ -76,6 +76,18 @@ namespace BypassBlueStacks
                 }
             },
             {
+                "asus_rog_phone_2",
+                new DeviceProfile
+                {
+                    Name = "ASUS ROG Phone 2",
+                    Model = "ASUS_I001DC",
+                    Brand = "asus",
+                    Manufacturer = "asus",
+                    Device = "ASUS_I001_1",
+                    Fingerprint = "asus/WW_ASUS_I001_1/ASUS_I001_1:11/RKQ1.201022.002/18.0610.2201.200-0:user/release-keys"
+                }
+            },
+            {
                 "xiaomi_redmi_note_11",
                 new DeviceProfile
                 {
