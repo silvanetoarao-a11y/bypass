@@ -466,6 +466,21 @@ namespace BypassBlueStacks
             btnConnectAdb.Click += BtnConnectAdb_Click;
             this.Controls.Add(btnConnectAdb);
 
+            // Botão Verificar Root
+            Button btnCheckRoot = new Button
+            {
+                Text = "🔓 Verificar Root",
+                Font = new Font("Segoe UI", 9),
+                BackColor = Color.FromArgb(68, 68, 68),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Location = new Point(420, 390),
+                Size = new Size(160, 30),
+            };
+            btnCheckRoot.FlatAppearance.BorderSize = 0;
+            btnCheckRoot.Click += BtnCheckRoot_Click;
+            this.Controls.Add(btnCheckRoot);
+
             // Log
             gbLog = new GroupBox
             {
@@ -831,6 +846,14 @@ namespace BypassBlueStacks
                             lblAdbStatus.Text = "📱 ADB: Conectado";
                             lblAdbStatus.ForeColor = successColor;
                             Log("✅ ADB conectado com sucesso!");
+                            
+                            // Verificar root automaticamente após conectar
+                            Task.Run(() =>
+                            {
+                                Thread.Sleep(500);
+                                CheckRoot();
+                            });
+                            
                             UpdateButtonStates();
                         }
                         else
@@ -891,7 +914,11 @@ namespace BypassBlueStacks
                 ApplyPropertiesOnce(device);
 
                 // Verificar root antes de aplicar propriedades específicas
-                CheckRoot();
+                bool rootAvailable = CheckRoot();
+                if (rootAvailable)
+                {
+                    Log("✅ Root detectado! Modificações permanentes serão aplicadas.");
+                }
                 
                 Log("🔧 Aplicando propriedades adicionais para jogos...");
                 ApplyGameSpecificProperties(deviceKey);
@@ -1347,6 +1374,65 @@ namespace BypassBlueStacks
             }, daemonCts.Token);
 
             Log("🔄 Daemon iniciado para manter bypass ativo");
+        }
+
+        private void BtnCheckRoot_Click(object sender, EventArgs e)
+        {
+            Log("🔍 Verificando status do root...");
+            
+            Task.Run(() =>
+            {
+                bool rootAvailable = CheckRoot();
+                
+                Invoke(new Action(() =>
+                {
+                    if (rootAvailable)
+                    {
+                        Log("✅ Root está ATIVO! Bypass avançado disponível.");
+                        MessageBox.Show(
+                            "✅ Root está ATIVO!\n\n" +
+                            "O bypass agora pode modificar arquivos do sistema permanentemente.\n\n" +
+                            "Isso melhora significativamente a compatibilidade com jogos como Last Island Survival.",
+                            "Root Ativo",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information
+                        );
+                    }
+                    else
+                    {
+                        Log("⚠️ Root NÃO está disponível.");
+                        var result = MessageBox.Show(
+                            "⚠️ Root não está disponível no BlueStacks.\n\n" +
+                            "Para ativar root:\n" +
+                            "1. Abra BlueStacks\n" +
+                            "2. Vá em Configurações > Avançado\n" +
+                            "3. Ative 'Root' ou 'Enable Root'\n" +
+                            "4. Reinicie o BlueStacks\n\n" +
+                            "Deseja abrir o guia completo?",
+                            "Root Não Disponível",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Warning
+                        );
+                        
+                        if (result == DialogResult.Yes)
+                        {
+                            try
+                            {
+                                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                                {
+                                    FileName = "notepad.exe",
+                                    Arguments = Path.Combine(Application.StartupPath, "COMO_ATIVAR_ROOT.md"),
+                                    UseShellExecute = true
+                                });
+                            }
+                            catch
+                            {
+                                Log("📖 Veja o arquivo COMO_ATIVAR_ROOT.md para instruções detalhadas");
+                            }
+                        }
+                    }
+                }));
+            });
         }
 
         private void BtnDeactivate_Click(object sender, EventArgs e)
