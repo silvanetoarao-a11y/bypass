@@ -98,6 +98,54 @@ namespace BypassBlueStacks
                     Device = "oriole",
                     Fingerprint = "google/oriole/oriole:13/TQ1A.230105.002/9325679:user/release-keys"
                 }
+            },
+            {
+                "samsung_galaxy_a52_freefire",
+                new DeviceProfile
+                {
+                    Name = "Samsung Galaxy A52 (Free Fire)",
+                    Model = "SM-A525F",
+                    Brand = "samsung",
+                    Manufacturer = "samsung",
+                    Device = "a52x",
+                    Fingerprint = "samsung/a52xinsxx/a52x:13/TP1A.220624.014/A525FXXU6DWB1:user/release-keys"
+                }
+            },
+            {
+                "xiaomi_redmi_note_10_freefire",
+                new DeviceProfile
+                {
+                    Name = "Xiaomi Redmi Note 10 (Free Fire)",
+                    Model = "M2101K9G",
+                    Brand = "Redmi",
+                    Manufacturer = "Xiaomi",
+                    Device = "mojito",
+                    Fingerprint = "Redmi/mojito_global/mojito:12/SKQ1.210908.001/V13.0.2.0.SKGMIXM:user/release-keys"
+                }
+            },
+            {
+                "oppo_a94_lastisland",
+                new DeviceProfile
+                {
+                    Name = "OPPO A94 (Last Island)",
+                    Model = "CPH2211",
+                    Brand = "OPPO",
+                    Manufacturer = "OPPO",
+                    Device = "CPH2211",
+                    Fingerprint = "OPPO/CPH2211EEA/OP4F81L1:12/SP1A.210812.016/CPH2211_11_A.20:user/release-keys"
+                }
+            },
+            {
+                "vivo_y20_lastisland",
+                new DeviceProfile
+                {
+                    Name = "Vivo Y20 (Last Island)",
+                    Model = "V2027",
+                    Brand = "vivo",
+                    Manufacturer = "vivo",
+                    Device = "2027",
+                    Fingerprint = "vivo/2027/2027:11/RP1A.200720.012/compiler08032130:user/release-keys"
+                }
             }
         };
 
@@ -845,13 +893,40 @@ namespace BypassBlueStacks
         {
             string[][] commands = new string[][]
             {
-                new[] { "adb", "shell", "setprop", "ro.kernel.qemu", "0" },
-                new[] { "adb", "shell", "setprop", "ro.hardware", "qcom" },
-                new[] { "adb", "shell", "setprop", "ro.product.model", device.Model },
-                new[] { "adb", "shell", "setprop", "ro.product.brand", device.Brand },
-                new[] { "adb", "shell", "setprop", "ro.product.manufacturer", device.Manufacturer },
-                new[] { "adb", "shell", "setprop", "ro.product.device", device.Device },
-                new[] { "adb", "shell", "setprop", "ro.build.fingerprint", device.Fingerprint }
+                new[] { adbPath, "shell", "setprop", "ro.kernel.qemu", "0" },
+                new[] { adbPath, "shell", "setprop", "ro.kernel.qemu.gles", "0" },
+                new[] { adbPath, "shell", "setprop", "ro.hardware", "qcom" },
+                new[] { adbPath, "shell", "setprop", "ro.hardware.egl", "adreno" },
+                new[] { adbPath, "shell", "setprop", "ro.product.model", device.Model },
+                new[] { adbPath, "shell", "setprop", "ro.product.brand", device.Brand },
+                new[] { adbPath, "shell", "setprop", "ro.product.manufacturer", device.Manufacturer },
+                new[] { adbPath, "shell", "setprop", "ro.product.device", device.Device },
+                new[] { adbPath, "shell", "setprop", "ro.product.name", device.Device },
+                new[] { adbPath, "shell", "setprop", "ro.build.fingerprint", device.Fingerprint },
+                new[] { adbPath, "shell", "setprop", "ro.build.product", device.Device },
+                // Propriedades de CPU (importante para Free Fire)
+                new[] { adbPath, "shell", "setprop", "ro.product.cpu.abi", "arm64-v8a" },
+                new[] { adbPath, "shell", "setprop", "ro.product.cpu.abilist", "arm64-v8a,armeabi-v7a,armeabi" },
+                new[] { adbPath, "shell", "setprop", "ro.product.cpu.abilist32", "armeabi-v7a,armeabi" },
+                new[] { adbPath, "shell", "setprop", "ro.product.cpu.abilist64", "arm64-v8a" },
+                // Propriedades de build (verificadas por jogos)
+                new[] { adbPath, "shell", "setprop", "ro.build.id", "SP1A.210812.016" },
+                new[] { adbPath, "shell", "setprop", "ro.build.version.release", "12" },
+                new[] { adbPath, "shell", "setprop", "ro.build.version.sdk", "31" },
+                new[] { adbPath, "shell", "setprop", "ro.build.version.codename", "REL" },
+                new[] { adbPath, "shell", "setprop", "ro.build.type", "user" },
+                new[] { adbPath, "shell", "setprop", "ro.build.tags", "release-keys" },
+                // Propriedades de hardware (importante para Last Island)
+                new[] { adbPath, "shell", "setprop", "ro.board.platform", "lahaina" },
+                new[] { adbPath, "shell", "setprop", "ro.chipname", "lahaina" },
+                // Propriedades de display
+                new[] { adbPath, "shell", "setprop", "ro.sf.lcd_density", "420" },
+                // Remover flags de debug/emulador
+                new[] { adbPath, "shell", "setprop", "ro.debuggable", "0" },
+                new[] { adbPath, "shell", "setprop", "ro.secure", "1" },
+                new[] { adbPath, "shell", "setprop", "ro.allow.mock.location", "0" },
+                // Propriedades de característica (Free Fire verifica)
+                new[] { adbPath, "shell", "setprop", "ro.product.characteristics", "phone,tablet" }
             };
 
             foreach (var cmd in commands)
