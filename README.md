@@ -2,25 +2,65 @@
 
 Solução completa para fazer o BlueStacks parecer um dispositivo móvel real, evitando detecção de emulador e possível banimento em jogos.
 
+## 🎨 Nova Versão com Interface Gráfica!
+
+**Agora disponível**: Aplicação Windows com interface gráfica moderna que funciona **SEM ROOT**!
+
+👉 **[Ver GUI_README.md](GUI_README.md)** para instruções da versão GUI
+
+---
+
+## 📦 Versões Disponíveis
+
+1. **GUI Executável** (Recomendado) - Interface gráfica, sem root, fácil de usar
+2. **Scripts CLI** - Versão avançada com root para modificação permanente
+
 ## 🎯 Objetivo
 
 Modificar propriedades do sistema Android no BlueStacks para que aplicativos e jogos detectem o dispositivo como um smartphone real ao invés de um emulador.
 
 ## ⚠️ Avisos Importantes
 
-- **Requer acesso ROOT** no BlueStacks
-- Faça **backup** antes de aplicar modificações
-- Use por sua **própria conta e risco**
-- Alguns jogos podem ter detecção avançada que não será contornada
+### Versão GUI (Recomendada)
+- ✅ **NÃO requer ROOT** - Usa ADB com depuração USB
+- ✅ Interface gráfica fácil de usar
+- ⚠️ Propriedades temporárias (precisa manter app aberto)
+
+### Versão CLI (Avançada)
+- ⚠️ **Requer acesso ROOT** no BlueStacks
+- ⚠️ Modificações permanentes no sistema
+- ⚠️ Faça **backup** antes de aplicar modificações
+- ⚠️ Use por sua **própria conta e risco**
+
+**Nota**: Alguns jogos podem ter detecção avançada que não será contornada.
 
 ## 📋 Requisitos
 
+### Para Versão GUI (Sem Root)
+1. Windows 10/11
+2. BlueStacks instalado e configurado
+3. ADB (Android Debug Bridge) instalado no PC
+4. Depuração USB habilitada no BlueStacks
+
+### Para Versão CLI (Com Root)
 1. BlueStacks instalado e configurado
 2. Acesso root habilitado no BlueStacks
 3. ADB (Android Debug Bridge) instalado no PC
 4. Python 3 instalado no BlueStacks (ou via ADB)
 
 ## 🚀 Instalação Rápida
+
+### 🎨 Versão GUI (Recomendada - Sem Root)
+
+Veja **[GUI_README.md](GUI_README.md)** para instruções completas.
+
+**Resumo rápido:**
+1. Execute `build.bat` para criar o executável
+2. Ou execute diretamente: `python bypass_gui.py`
+3. A aplicação detectará o BlueStacks automaticamente
+4. Selecione o dispositivo e clique em "Ativar Bypass"
+
+### 💻 Versão CLI (Avançada - Com Root)
 
 ### Método 1: Via ADB (Recomendado)
 
