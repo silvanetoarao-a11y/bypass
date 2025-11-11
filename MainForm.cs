@@ -919,7 +919,27 @@ namespace BypassBlueStacks
                     // Propriedades de sistema (Last Island verifica extensivamente)
                     new[] { adbPath, "shell", "setprop", "ro.serialno", "R58M123456" },
                     new[] { adbPath, "shell", "setprop", "sys.usb.state", "mtp,adb" },
-                    new[] { adbPath, "shell", "setprop", "ro.adb.secure", "1" }
+                    new[] { adbPath, "shell", "setprop", "ro.adb.secure", "1" },
+                    // Propriedades críticas que Last Island verifica
+                    new[] { adbPath, "shell", "setprop", "ro.build.flavor", "a52xinsxx-user" },
+                    new[] { adbPath, "shell", "setprop", "ro.product.board", "lahaina" },
+                    new[] { adbPath, "shell", "setprop", "ro.product.vendor.board", "lahaina" },
+                    new[] { adbPath, "shell", "setprop", "ro.product.vendor.name", "CPH2211" },
+                    new[] { adbPath, "shell", "setprop", "ro.product.vendor.model", "CPH2211" },
+                    // Propriedades de inicialização
+                    new[] { adbPath, "shell", "setprop", "ro.boot.verifiedbootstate", "green" },
+                    new[] { adbPath, "shell", "setprop", "ro.boot.veritymode", "enforcing" },
+                    new[] { adbPath, "shell", "setprop", "ro.boot.flash.locked", "1" },
+                    // Propriedades de hardware específicas
+                    new[] { adbPath, "shell", "setprop", "ro.hardware.vulkan", "pastel" },
+                    new[] { adbPath, "shell", "setprop", "ro.hardware.audio.primary", "lahaina" },
+                    new[] { adbPath, "shell", "setprop", "ro.hardware.bluetooth", "lahaina" },
+                    // Propriedades de DRM (jogos verificam)
+                    new[] { adbPath, "shell", "setprop", "ro.vendor.drm", "1" },
+                    new[] { adbPath, "shell", "setprop", "ro.vendor.media", "1" },
+                    // Propriedades de telemetria (Last Island pode verificar)
+                    new[] { adbPath, "shell", "setprop", "ro.telephony.default_network", "22" },
+                    new[] { adbPath, "shell", "setprop", "ro.telephony.call_ring.multiple", "false" }
                 };
 
                 foreach (var cmd in lastIslandCommands)
@@ -947,7 +967,63 @@ namespace BypassBlueStacks
                     catch { }
                 }
                 Log("✅ Propriedades específicas do Last Island aplicadas");
+                
+                // Tentar modificar arquivos do sistema (pode não funcionar sem root)
+                TryModifySystemFiles();
             }
+
+        private void TryModifySystemFiles()
+        {
+            // Tentar modificar arquivos do sistema que indicam emulador
+            // Nota: Pode não funcionar sem root, mas tentamos mesmo assim
+            try
+            {
+                Log("🔧 Tentando modificar arquivos do sistema...");
+                
+                // Comandos que podem funcionar sem root (tentativa)
+                string[][] commands = new string[][]
+                {
+                    // Tentar criar arquivo que indica dispositivo real (pode funcionar sem root)
+                    new[] { adbPath, "shell", "touch", "/data/local/tmp/.real_device" },
+                    // Tentar modificar propriedades via shell diretamente
+                    new[] { adbPath, "shell", "echo", "0", ">", "/data/local/tmp/qemu_flag" },
+                    // Tentar verificar se podemos escrever em /data
+                    new[] { adbPath, "shell", "echo", "real_device", ">", "/data/local/tmp/device_type" }
+                };
+
+                foreach (var cmd in commands)
+                {
+                    try
+                    {
+                        ProcessStartInfo psi = new ProcessStartInfo
+                        {
+                            FileName = cmd[0],
+                            Arguments = string.Join(" ", cmd.Skip(1)),
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            CreateNoWindow = true
+                        };
+
+                        using (Process process = Process.Start(psi))
+                        {
+                            if (process != null)
+                            {
+                                process.WaitForExit(2000);
+                            }
+                        }
+                    }
+                    catch { }
+                }
+                
+                Log("⚠️ Modificação de arquivos tentada (algumas podem requerer root)");
+                Log("⚠️ IMPORTANTE: Last Island pode requerer ROOT para bypass completo");
+            }
+            catch (Exception ex)
+            {
+                Log($"⚠️ Não foi possível modificar arquivos do sistema: {ex.Message}");
+            }
+        }
 
             // Propriedades específicas para Free Fire
             if (deviceKey.Contains("freefire"))
