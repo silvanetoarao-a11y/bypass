@@ -975,6 +975,46 @@ namespace BypassBlueStacks
                 TryModifySystemFiles();
             }
 
+            // Propriedades específicas para Free Fire
+            if (deviceKey.Contains("freefire"))
+            {
+                string[][] freeFireCommands = new string[][]
+                {
+                    // Propriedades específicas do Free Fire
+                    new[] { adbPath, "shell", "setprop", "ro.product.board", "lahaina" },
+                    new[] { adbPath, "shell", "setprop", "ro.board.platform", "lahaina" },
+                    new[] { adbPath, "shell", "setprop", "ro.chipname", "lahaina" },
+                    new[] { adbPath, "shell", "setprop", "ro.product.board.platform", "lahaina" }
+                };
+
+                foreach (var cmd in freeFireCommands)
+                {
+                    try
+                    {
+                        ProcessStartInfo psi = new ProcessStartInfo
+                        {
+                            FileName = cmd[0],
+                            Arguments = string.Join(" ", cmd.Skip(1)),
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            CreateNoWindow = true
+                        };
+
+                        using (Process process = Process.Start(psi))
+                        {
+                            if (process != null)
+                            {
+                                process.WaitForExit(2000);
+                            }
+                        }
+                    }
+                    catch { }
+                }
+                Log("✅ Propriedades específicas do Free Fire aplicadas");
+            }
+        }
+
         private bool hasRoot = false;
 
         private bool CheckRoot()
@@ -1109,48 +1149,6 @@ namespace BypassBlueStacks
                 
                 Log("⚠️ IMPORTANTE: Para bypass completo do Last Island, ative ROOT no BlueStacks!");
                 Log("📖 Veja o guia: COMO_ATIVAR_ROOT.md");
-            }
-        }
-
-        // Propriedades específicas para Free Fire
-        private void ApplyFreeFireProperties()
-        {
-            if (deviceKey.Contains("freefire"))
-            {
-                string[][] freeFireCommands = new string[][]
-                {
-                    // Propriedades específicas do Free Fire
-                    new[] { adbPath, "shell", "setprop", "ro.product.board", "lahaina" },
-                    new[] { adbPath, "shell", "setprop", "ro.board.platform", "lahaina" },
-                    new[] { adbPath, "shell", "setprop", "ro.chipname", "lahaina" },
-                    new[] { adbPath, "shell", "setprop", "ro.product.board.platform", "lahaina" }
-                };
-
-                foreach (var cmd in freeFireCommands)
-                {
-                    try
-                    {
-                        ProcessStartInfo psi = new ProcessStartInfo
-                        {
-                            FileName = cmd[0],
-                            Arguments = string.Join(" ", cmd.Skip(1)),
-                            UseShellExecute = false,
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true,
-                            CreateNoWindow = true
-                        };
-
-                        using (Process process = Process.Start(psi))
-                        {
-                            if (process != null)
-                            {
-                                process.WaitForExit(2000);
-                            }
-                        }
-                    }
-                    catch { }
-                }
-                Log("✅ Propriedades específicas do Free Fire aplicadas");
             }
         }
 
