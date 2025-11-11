@@ -32,6 +32,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\adb.exe" />
+    <EmbeddedResource Include="Resources\AdbWinApi.dll" />
+    <EmbeddedResource Include="Resources\AdbWinUsbApi.dll" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="Resources\*.exe" />
+    <None Include="Resources\*.dll" />
+  </ItemGroup>
 </Project>

@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,6 +45,8 @@ namespace BypassBlueStacks
         private bool isConnectingAdb = false; // Flag para evitar múltiplas tentativas
         private CancellationTokenSource daemonCts;
         private Task daemonTask;
+        private string adbPath = "adb"; // Caminho padrão, será substituído pelo ADB embutido
+        private string tempAdbFolder = string.Empty;
 
         // Perfis de dispositivos
         private readonly Dictionary<string, DeviceProfile> deviceProfiles = new Dictionary<string, DeviceProfile>
@@ -100,8 +104,131 @@ namespace BypassBlueStacks
         public MainForm()
         {
             InitializeComponent();
+            ExtractEmbeddedAdb();
             SetupUI();
             StartMonitoring();
+        }
+
+        private void ExtractEmbeddedAdb()
+        {
+            try
+            {
+                // Criar pasta temporária para ADB
+                tempAdbFolder = Path.Combine(Path.GetTempPath(), "BypassBlueStacks_ADB", Guid.NewGuid().ToString());
+                Directory.CreateDirectory(tempAdbFolder);
+
+                // Arquivos do ADB que precisam ser extraídos
+                string[] adbFiles = { "adb.exe", "AdbWinApi.dll", "AdbWinUsbApi.dll" };
+                bool allFilesFound = true;
+
+                foreach (string fileName in adbFiles)
+                {
+                    string resourceName = $"BypassBlueStacks.Resources.{fileName}";
+                    string outputPath = Path.Combine(tempAdbFolder, fileName);
+
+                    // Tentar extrair do assembly
+                    using (Stream resourceStream = typeof(MainForm).Assembly.GetManifestResourceStream(resourceName))
+                    {
+                        if (resourceStream != null)
+                        {
+                            using (FileStream fileStream = new FileStream(outputPath, FileMode.Create))
+                            {
+                                resourceStream.CopyTo(fileStream);
+                            }
+                        }
+                        else
+                        {
+                            // Se não encontrar no assembly, tentar procurar na pasta do executável
+                            string localPath = Path.Combine(Application.StartupPath, fileName);
+                            if (File.Exists(localPath))
+                            {
+                                File.Copy(localPath, outputPath, true);
+                            }
+                            else
+                            {
+                                allFilesFound = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (allFilesFound)
+                {
+                    // Usar ADB extraído
+                    adbPath = Path.Combine(tempAdbFolder, "adb.exe");
+                    if (InvokeRequired)
+                    {
+                        Invoke(new Action(() => Log($"✅ ADB embutido extraído para: {tempAdbFolder}")));
+                    }
+                    else
+                    {
+                        Log($"✅ ADB embutido extraído para: {tempAdbFolder}");
+                    }
+                }
+                else
+                {
+                    // Se não encontrar arquivos embutidos, usar ADB do sistema
+                    if (InvokeRequired)
+                    {
+                        Invoke(new Action(() => Log("⚠️ ADB embutido não encontrado. Usando ADB do sistema (se disponível).")));
+                    }
+                    else
+                    {
+                        Log("⚠️ ADB embutido não encontrado. Usando ADB do sistema (se disponível).");
+                    }
+                    adbPath = "adb";
+                }
+            }
+            catch (Exception ex)
+            {
+                if (InvokeRequired)
+                {
+                    Invoke(new Action(() => Log($"⚠️ Erro ao extrair ADB embutido: {ex.Message}. Usando ADB do sistema.")));
+                }
+                else
+                {
+                    Log($"⚠️ Erro ao extrair ADB embutido: {ex.Message}. Usando ADB do sistema.");
+                }
+                adbPath = "adb";
+            }
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            // Limpar arquivos temporários do ADB
+            CleanupTempAdb();
+            base.OnFormClosing(e);
+        }
+
+        private void CleanupTempAdb()
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(tempAdbFolder) && Directory.Exists(tempAdbFolder))
+                {
+                    // Tentar deletar arquivos
+                    try
+                    {
+                        string[] files = Directory.GetFiles(tempAdbFolder);
+                        foreach (string file in files)
+                        {
+                            try
+                            {
+                                File.Delete(file);
+                            }
+                            catch { }
+                        }
+                        Directory.Delete(tempAdbFolder);
+                    }
+                    catch
+                    {
+                        // Se não conseguir deletar agora, marcar para deletar na próxima inicialização
+                        // (Windows pode estar usando os arquivos ainda)
+                    }
+                }
+            }
+            catch { }
         }
 
         private void InitializeComponent()
@@ -299,6 +426,14 @@ namespace BypassBlueStacks
         private void SetupUI()
         {
             Log("Sistema iniciado. Aguardando BlueStacks...");
+            if (adbPath != "adb" && File.Exists(adbPath))
+            {
+                Log($"✅ ADB embutido carregado: {Path.GetDirectoryName(adbPath)}");
+            }
+            else
+            {
+                Log("⚠️ ADB embutido não encontrado. Tentando usar ADB do sistema...");
+            }
         }
 
         private void CmbDevice_SelectedIndexChanged(object sender, EventArgs e)
@@ -352,7 +487,7 @@ namespace BypassBlueStacks
             {
                 ProcessStartInfo psi = new ProcessStartInfo
                 {
-                    FileName = "adb",
+                    FileName = adbPath,
                     Arguments = "devices",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -485,7 +620,7 @@ namespace BypassBlueStacks
             {
                 ProcessStartInfo psi = new ProcessStartInfo
                 {
-                    FileName = "adb",
+                    FileName = adbPath,
                     Arguments = "connect 127.0.0.1:5555",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -549,7 +684,7 @@ namespace BypassBlueStacks
                 {
                     ProcessStartInfo psi = new ProcessStartInfo
                     {
-                        FileName = "adb",
+                        FileName = adbPath,
                         Arguments = $"connect 127.0.0.1:{port}",
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
@@ -598,7 +733,7 @@ namespace BypassBlueStacks
             {
                 ProcessStartInfo psi = new ProcessStartInfo
                 {
-                    FileName = "adb",
+                    FileName = adbPath,
                     Arguments = "connect 127.0.0.1:5555",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -757,7 +892,7 @@ namespace BypassBlueStacks
             {
                 ProcessStartInfo psi = new ProcessStartInfo
                 {
-                    FileName = "adb",
+                    FileName = adbPath,
                     Arguments = "shell getprop ro.product.model",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -830,7 +965,7 @@ namespace BypassBlueStacks
                 {
                     ProcessStartInfo psi = new ProcessStartInfo
                     {
-                        FileName = "adb",
+                        FileName = adbPath,
                         Arguments = "shell setprop ro.kernel.qemu \"\"",
                         UseShellExecute = false,
                         CreateNoWindow = true
