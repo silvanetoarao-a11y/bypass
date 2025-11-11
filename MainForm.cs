@@ -864,11 +864,11 @@ namespace BypassBlueStacks
 
     public class DeviceProfile
     {
-        public string Name { get; set; }
-        public string Model { get; set; }
-        public string Brand { get; set; }
-        public string Manufacturer { get; set; }
-        public string Device { get; set; }
-        public string Fingerprint { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Model { get; set; } = string.Empty;
+        public string Brand { get; set; } = string.Empty;
+        public string Manufacturer { get; set; } = string.Empty;
+        public string Device { get; set; } = string.Empty;
+        public string Fingerprint { get; set; } = string.Empty;
     }
 }
