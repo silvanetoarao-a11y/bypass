@@ -38,6 +38,6 @@ echo ========================================
 echo   Build concluido com sucesso!
 echo ========================================
 echo.
-echo Executavel criado em: bin\Release\net6.0-windows\BypassBlueStacks.exe
+echo Executavel criado em: bin\Release\net8.0-windows\BypassBlueStacks.exe
 echo.
 pause

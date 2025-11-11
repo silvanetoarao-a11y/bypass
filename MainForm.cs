@@ -34,7 +34,7 @@ namespace BypassBlueStacks
         private Button btnConnectAdb;
         private GroupBox gbLog;
         private TextBox txtLog;
-        private Timer timerMonitor;
+        private System.Windows.Forms.Timer timerMonitor;
 
         // Variáveis
         private bool bluestacksRunning = false;
@@ -375,7 +375,7 @@ namespace BypassBlueStacks
 
         private void StartMonitoring()
         {
-            timerMonitor = new Timer
+            timerMonitor = new System.Windows.Forms.Timer
             {
                 Interval = 2000 // 2 segundos
             };

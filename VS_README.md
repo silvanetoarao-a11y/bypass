@@ -9,7 +9,7 @@ Projeto Visual Studio 2022 para compilar aplicação de bypass BlueStacks em mod
 ### Pré-requisitos
 
 1. **Visual Studio 2022** (Community, Professional ou Enterprise)
-2. **.NET 6.0 SDK** ou superior
+2. **.NET 8.0 SDK** ou superior
 3. **Workload**: Desktop development with C++ (opcional, para compilação nativa)
 
 ### Compilar em Release
@@ -19,7 +19,7 @@ Projeto Visual Studio 2022 para compilar aplicação de bypass BlueStacks em mod
 1. Abra `BypassBlueStacks.sln` no Visual Studio 2022
 2. Selecione **Release** no dropdown de configuração (topo da tela)
 3. Menu: **Build** > **Build Solution** (ou `Ctrl+Shift+B`)
-4. O executável será gerado em: `bin\Release\net6.0-windows\BypassBlueStacks.exe`
+4. O executável será gerado em: `bin\Release\net8.0-windows\BypassBlueStacks.exe`
 
 #### Método 2: Linha de Comando
 
@@ -63,7 +63,7 @@ O projeto está configurado para Release com:
 - ✅ **Otimizações habilitadas** (`Optimize=true`)
 - ✅ **Sem símbolos de debug** (`DebugType=none`)
 - ✅ **Sem informações de debug** (`DebugSymbols=false`)
-- ✅ **Target Framework**: .NET 6.0 Windows
+- ✅ **Target Framework**: .NET 8.0 Windows
 - ✅ **Windows Forms** habilitado
 
 ## 🎯 Características da Aplicação
@@ -109,13 +109,13 @@ Para assinar o executável:
 
 ## 📦 Dependências
 
-- **.NET 6.0 Windows Forms** - Framework de UI (incluído no SDK)
+- **.NET 8.0 Windows Forms** - Framework de UI (incluído no SDK)
 - Nenhuma dependência externa necessária
 
 ## 🐛 Troubleshooting
 
 ### Erro: "Target framework not found"
-- Instale .NET 6.0 SDK: https://dotnet.microsoft.com/download
+- Instale .NET 8.0 SDK: https://dotnet.microsoft.com/download
 
 ### Erro: "Visual Studio workload missing"
 - Abra Visual Studio Installer
@@ -124,7 +124,7 @@ Para assinar o executável:
 
 ### Executável não funciona em outros PCs
 - Use `--self-contained true` para incluir runtime
-- Ou instale .NET 6.0 Runtime no PC destino
+- Ou instale .NET 8.0 Runtime no PC destino
 
 ## 📝 Notas
 
@@ -136,6 +136,6 @@ Para assinar o executável:
 
 Após compilar em Release:
 
-1. Copie `BypassBlueStacks.exe` de `bin\Release\net6.0-windows\`
+1. Copie `BypassBlueStacks.exe` de `bin\Release\net8.0-windows\`
 2. Distribua junto com ADB ou instrua usuários a instalarem ADB
 3. Ou crie instalador usando WiX/Inno Setup
