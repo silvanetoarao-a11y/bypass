@@ -40,6 +40,7 @@ namespace BypassBlueStacks
         private bool bluestacksRunning = false;
         private bool bypassActive = false;
         private bool adbConnected = false;
+        private bool isConnectingAdb = false; // Flag para evitar múltiplas tentativas
         private CancellationTokenSource daemonCts;
         private Task daemonTask;
 
@@ -380,6 +381,16 @@ namespace BypassBlueStacks
             };
             timerMonitor.Tick += TimerMonitor_Tick;
             timerMonitor.Start();
+            
+            // Tentar conectar imediatamente se BlueStacks já estiver rodando
+            if (CheckBlueStacks())
+            {
+                Task.Run(() => 
+                {
+                    Thread.Sleep(1000); // Aguardar 1 segundo para garantir que tudo está inicializado
+                    ConnectAdbAutomatically();
+                });
+            }
         }
 
         private void TimerMonitor_Tick(object sender, EventArgs e)
@@ -403,7 +414,7 @@ namespace BypassBlueStacks
                 UpdateButtonStates();
             }
 
-            // Verificar ADB
+            // Verificar ADB e conectar automaticamente se necessário
             if (bluestacksRunning)
             {
                 bool connected = CheckAdbConnection();
@@ -419,7 +430,23 @@ namespace BypassBlueStacks
                     {
                         lblAdbStatus.Text = "📱 ADB: Não conectado";
                         lblAdbStatus.ForeColor = Color.FromArgb(136, 136, 136);
+                        // Tentar conectar automaticamente (apenas se não estiver tentando já)
+                        if (!isConnectingAdb)
+                        {
+                            Task.Run(() => ConnectAdbAutomatically());
+                        }
                     }
+                    UpdateButtonStates();
+                }
+            }
+            else
+            {
+                // Se BlueStacks não está rodando, resetar status ADB
+                if (adbConnected)
+                {
+                    adbConnected = false;
+                    lblAdbStatus.Text = "📱 ADB: Não conectado";
+                    lblAdbStatus.ForeColor = Color.FromArgb(136, 136, 136);
                     UpdateButtonStates();
                 }
             }
@@ -447,6 +474,122 @@ namespace BypassBlueStacks
             }
         }
 
+        private void ConnectAdbAutomatically()
+        {
+            // Evitar múltiplas tentativas simultâneas
+            if (adbConnected || isConnectingAdb) return;
+            
+            isConnectingAdb = true;
+
+            try
+            {
+                ProcessStartInfo psi = new ProcessStartInfo
+                {
+                    FileName = "adb",
+                    Arguments = "connect 127.0.0.1:5555",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+
+                using (Process process = Process.Start(psi))
+                {
+                    if (process != null)
+                    {
+                        string output = process.StandardOutput.ReadToEnd();
+                        string error = process.StandardError.ReadToEnd();
+                        process.WaitForExit(5000); // Timeout de 5 segundos
+                        
+                        string fullOutput = output + error;
+                        
+                        if (fullOutput.ToLower().Contains("connected") || 
+                            fullOutput.ToLower().Contains("already") ||
+                            fullOutput.ToLower().Contains("successfully"))
+                        {
+                                Invoke(new Action(() =>
+                                {
+                                    adbConnected = true;
+                                    isConnectingAdb = false; // Resetar flag
+                                    lblAdbStatus.Text = "📱 ADB: Conectado";
+                                    lblAdbStatus.ForeColor = successColor;
+                                    Log("✅ ADB conectado automaticamente!");
+                                    UpdateButtonStates();
+                                }));
+                        }
+                        else
+                        {
+                            // Tentar outras portas comuns do BlueStacks
+                            TryConnectOtherPorts();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Invoke(new Action(() =>
+                {
+                    Log($"⚠️ Tentativa automática de conexão falhou: {ex.Message}");
+                }));
+            }
+            finally
+            {
+                isConnectingAdb = false;
+            }
+        }
+
+        private void TryConnectOtherPorts()
+        {
+            // Tentar portas alternativas do BlueStacks
+            int[] ports = { 5556, 5557, 5558, 5559, 5560 }; // 5555 já foi tentada
+            
+            foreach (int port in ports)
+            {
+                try
+                {
+                    ProcessStartInfo psi = new ProcessStartInfo
+                    {
+                        FileName = "adb",
+                        Arguments = $"connect 127.0.0.1:{port}",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        CreateNoWindow = true
+                    };
+
+                    using (Process process = Process.Start(psi))
+                    {
+                        if (process != null)
+                        {
+                            string output = process.StandardOutput.ReadToEnd();
+                            process.WaitForExit(3000);
+                            
+                            if (output.ToLower().Contains("connected") || 
+                                output.ToLower().Contains("already"))
+                            {
+                                Invoke(new Action(() =>
+                                {
+                                    adbConnected = true;
+                                    isConnectingAdb = false; // Resetar flag
+                                    lblAdbStatus.Text = $"📱 ADB: Conectado (porta {port})";
+                                    lblAdbStatus.ForeColor = successColor;
+                                    Log($"✅ ADB conectado automaticamente na porta {port}!");
+                                    UpdateButtonStates();
+                                }));
+                                return;
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+            
+            // Se nenhuma porta funcionou, resetar flag
+            Invoke(new Action(() =>
+            {
+                isConnectingAdb = false;
+            }));
+        }
+
         private void BtnConnectAdb_Click(object sender, EventArgs e)
         {
             Log("Tentando conectar ao BlueStacks via ADB...");
@@ -459,6 +602,7 @@ namespace BypassBlueStacks
                     Arguments = "connect 127.0.0.1:5555",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
+                    RedirectStandardError = true,
                     CreateNoWindow = true
                 };
 
@@ -467,9 +611,14 @@ namespace BypassBlueStacks
                     if (process != null)
                     {
                         string output = process.StandardOutput.ReadToEnd();
+                        string error = process.StandardError.ReadToEnd();
                         process.WaitForExit();
                         
-                        if (output.ToLower().Contains("connected") || output.ToLower().Contains("already"))
+                        string fullOutput = output + error;
+                        
+                        if (fullOutput.ToLower().Contains("connected") || 
+                            fullOutput.ToLower().Contains("already") ||
+                            fullOutput.ToLower().Contains("successfully"))
                         {
                             adbConnected = true;
                             lblAdbStatus.Text = "📱 ADB: Conectado";
@@ -479,17 +628,23 @@ namespace BypassBlueStacks
                         }
                         else
                         {
-                            Log("⚠️ Não foi possível conectar. Verifique se a depuração USB está habilitada.");
-                            MessageBox.Show(
-                                "Não foi possível conectar ao BlueStacks.\n\n" +
-                                "Certifique-se de:\n" +
-                                "1. BlueStacks está aberto\n" +
-                                "2. Depuração USB está habilitada\n" +
-                                "3. ADB está instalado no sistema",
-                                "ADB não conectado",
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Warning
-                            );
+                            Log("⚠️ Não foi possível conectar na porta 5555. Tentando outras portas...");
+                            TryConnectOtherPorts();
+                            
+                            if (!adbConnected)
+                            {
+                                Log("⚠️ Não foi possível conectar. Verifique se a depuração USB está habilitada.");
+                                MessageBox.Show(
+                                    "Não foi possível conectar ao BlueStacks.\n\n" +
+                                    "Certifique-se de:\n" +
+                                    "1. BlueStacks está aberto\n" +
+                                    "2. Depuração USB está habilitada\n" +
+                                    "3. ADB está instalado no sistema",
+                                    "ADB não conectado",
+                                    MessageBoxButtons.OK,
+                                    MessageBoxIcon.Warning
+                                );
+                            }
                         }
                     }
                 }
