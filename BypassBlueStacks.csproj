@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>disable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
+    <AssemblyName>BypassBlueStacks</AssemblyName>
+    <RootNamespace>BypassBlueStacks</RootNamespace>
+    <Version>1.0.0</Version>
+    <Authors>BypassBlueStacks</Authors>
+    <Company>BypassBlueStacks</Company>
+    <Product>Bypass BlueStacks</Product>
+    <Description>Aplicação para simular dispositivo mobile no BlueStacks</Description>
+    <Copyright>Copyright © 2024</Copyright>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\net8.0-windows\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\net8.0-windows\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\adb.exe" />
+    <EmbeddedResource Include="Resources\AdbWinApi.dll" />
+    <EmbeddedResource Include="Resources\AdbWinUsbApi.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Resources\*.exe" />
+    <None Include="Resources\*.dll" />
+  </ItemGroup>
+</Project>
